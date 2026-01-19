@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this dataset, please cite it as below."
+type: dataset
+title: "Exact Enumeration Tables for Grid Occupancy Adjacencies"
+authors:
+  - family-names: "DeZonia"
+    given-names: "Barry"
+year: 2026
+url: "https://github.com/bdezonia/mrc-data"
+abstract: >
+  Exact enumeration data for the combinatorial function m(r,c,o,a), giving the
+  number of ways to place o occupied cells in an r x c grid with exactly a
+  horizontal/vertical adjacencies.
+license: "CC-BY-4.0"
+preferred-citation:
+  type: dataset
+  authors:
+    - family-names: "DeZonia"
+      given-names: "Barry"
+  title: "Exact Enumeration Tables for Grid Occupancy Adjacencies"
+  year: 2026
+  url: "https://github.com/bdezonia/mrc-data"
+  note: "Exact enumeration data for the combinatorial function m(r,c,o,a)"
