@@ -2,13 +2,11 @@
 
 This repository provides **exact, verified enumeration data** for the combinatorial function
 
-\[
-m(r,c,o,a),
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />
 
-the number of ways to place \( o \) occupied cells in an \( r \times c \) grid such that exactly \( a \) horizontal/vertical adjacencies occur.
+the number of ways to place  o  occupied cells in an  r \times c  grid such that exactly  a  horizontal/vertical adjacencies occur.
 
-While the **data itself is exact**, some of the **theoretical bounds and closed‑form formulas** used for analysis (notably for \( a_{\min} \) and \( a_{\max} \)) have **regime‑dependent validity**.  
+While the **data itself is exact**, some of the **theoretical bounds and closed‑form formulas** used for analysis (notably for <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" /> and <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />) have **regime‑dependent validity**.  
 This section documents those known limitations clearly and transparently.
 
 ---
@@ -17,12 +15,12 @@ This section documents those known limitations clearly and transparently.
 
 All CSV files in this repository satisfy the following **hard invariants**:
 
-- Dense format: every \( (o,a) \) pair appears
-- \( \sum_{o,a} m(r,c,o,a) = 2^{rc} \)
-- \( \sum_a m(r,c,o,a) = \binom{rc}{o} \)
+- Dense format: every  (o,a)  pair appears
+- <img src="https://latex.codecogs.com/svg.latex?%5Csum_%7Bo%2Ca%7D%20m%28r%2Cc%2Co%2Ca%29%3D2%5E%7Brc%7D" />
+- <img src="https://latex.codecogs.com/svg.latex?%5Csum_a%20m%28r%2Cc%2Co%2Ca%29%3D%5Cbinom%7Brc%7D%7Bo%7D" />
 - Boundary conditions:
-  - \( m(r,c,0,0) = 1 \)
-  - \( m(r,c,rc,2rc-r-c) = 1 \)
+  - <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2C0%2C0%29%3D1" />
+  - <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Crc%2C2rc-r-c%29%3D1" />
 
 These ensure the **enumeration is mathematically correct**.
 
@@ -30,41 +28,41 @@ All additional checks involving theoretical formulas are **diagnostic**, not cor
 
 ---
 
-## 2. Lower Adjacency Bound \( a_{\min} \)
+## 2. Lower Adjacency Bound <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" />
 
 ### Robust (Exact) Bound
 
-For all grids, the *true* minimal number of adjacencies for a given \( o \) is determined by:
+For all grids, the *true* minimal number of adjacencies for a given  o  is determined by:
 
 - The grid graph’s bipartite structure
-- The independence number \( \alpha = \lceil rc/2 \rceil \)
+- The independence number <img src="https://latex.codecogs.com/svg.latex?%5Calpha%3D%5Clceil%20rc/2%20%5Crceil" />
 - The degree sequence of the smaller color class
 
-When \( o > \alpha \), the minimum induced adjacencies equal the sum of the \( o-\alpha \) smallest vertex degrees in the opposite color class.
+When <img src="https://latex.codecogs.com/svg.latex?o%3E%5Calpha" />, the minimum induced adjacencies equal the sum of the <img src="https://latex.codecogs.com/svg.latex?o-%5Calpha" /> smallest vertex degrees in the opposite color class.
 
 This bound is **always correct** and is used by the verifier.
 
 ### Closed‑Form Approximation
 
-The closed‑form \( a_{\min}(r,c,o) \) formula used in the accompanying theory assumes an initial slope of approximately **3** above \( \alpha \) for typical 2D grids.
+The closed‑form  a_{\min}(r,c,o)  formula used in the accompanying theory assumes an initial slope of approximately **3** above  \alpha  for typical 2D grids.
 
 However, this approximation fails for certain geometries, especially:
 
 - **Odd × odd grids** (e.g., 5×5, 7×7, 11×11)  
 - Grids with many **degree‑2 corner vertices**  
-- Small minimum dimension (e.g., \( r=3,5,7 \))
+- Small minimum dimension (e.g., r=3,5,7)
 
 In these cases, the true initial slope is often **2**, not 3.
 
 Therefore:
 
-> The closed‑form \( a_{\min} \) formula is **regime‑dependent** and should not be treated as universally exact.
+> The closed‑form <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" /> formula is **regime‑dependent** and should not be treated as universally exact.
 
 ---
 
-## 3. Upper Adjacency Bound \( a_{\max} \)
+## 3. Upper Adjacency Bound <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />
 
-The closed‑form \( a_{\max}(r,c,o) \) formula is based on rectangular block‑packing arguments.
+The closed‑form  a_{\max}(r,c,o)  formula is based on rectangular block‑packing arguments.
 
 It is accurate for most large, “bulk” 2D grids, but mismatches occur for:
 
@@ -106,8 +104,8 @@ The verification scripts enforce **data correctness only**:
 
 The following are treated as **non‑fatal diagnostics**:
 
-- Closed‑form \( a_{\min} \) mismatches  
-- Closed‑form \( a_{\max} \) mismatches  
+- Closed‑form <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" /> mismatches  
+- Closed‑form <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" /> mismatches  
 
 This ensures that:
 
@@ -120,7 +118,7 @@ This ensures that:
 
 When using these data or formulas:
 
-- Use the **DP data** as the authoritative source for all \( (r,c,o,a) \)
+- Use the **DP data** as the authoritative source for all  (r,c,o,a) 
 - Treat closed‑form bounds as **approximations**
 - State grid‑size restrictions explicitly in any theoretical claims
 - Avoid applying formulas to odd×odd or very small grids without qualification

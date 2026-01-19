@@ -2,7 +2,7 @@
 
 ## Problem Definition
 
-Let \( G_{r,c} \) denote the \( r \times c \) rectangular grid graph, whose vertices correspond to grid cells and whose edges represent horizontal and vertical adjacencies.
+Let \( G_{r,c} \) denote the r × c rectangular grid graph, whose vertices correspond to grid cells and whose edges represent horizontal and vertical adjacencies.
 
 For integers
 
@@ -10,7 +10,7 @@ For integers
 - \( 0 \le o \le rc \) (number of occupied cells),  
 - \( 0 \le a \le 2rc - r - c \) (number of adjacencies),  
 
-the quantity \( m(r,c,o,a) \) is defined as the number of subsets of \( o \) vertices of \( G_{r,c} \) whose induced subgraph contains exactly \( a \) edges.
+the quantity \( m(r,c,o,a) \) is defined as the number of subsets of o vertices of \( G_{r,c} \) whose induced subgraph contains exactly a edges.
 
 Boundary conditions:
 
@@ -96,8 +96,8 @@ D_k[s][o][a],
 
 which stores the number of partial configurations ending in column state \( s \) with:
 
-- \( o \) occupied cells so far,  
-- \( a \) adjacencies so far.  
+- o occupied cells so far,  
+- a adjacencies so far.  
 
 Initialization:
 
