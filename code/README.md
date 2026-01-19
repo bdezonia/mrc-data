@@ -2,9 +2,7 @@
 
 This directory contains a Java implementation of an exact dynamic-programming (DP) algorithm for computing the combinatorial function
 
-\[
-m(r,c,o,a),
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%2C" />
 
 the number of ways to place o occupied cells in an r × c grid such that exactly a horizontal/vertical adjacencies occur.
 
@@ -29,7 +27,7 @@ Key features:
 
 - Bitmask representation of column states  
 - Horizontal and vertical adjacency tracking  
-- Symmetry reduction: grids are transposed so that \( r \le c \)  
+- Symmetry reduction: grids are transposed so that <img src="https://latex.codecogs.com/svg.latex?r%20%5Cle%20c" />  
 - Deterministic, exact enumeration  
 
 Main entry point:
@@ -97,9 +95,7 @@ Transitions between consecutive columns account for:
 
 At the final column, all states are aggregated to produce the full table:
 
-\[
-m(r,c,o,a).
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29." />
 
 All counts are **exact**.
 
@@ -109,7 +105,7 @@ All counts are **exact**.
 
 Due to the exponential number of column states:
 
-- The column height (\( r \)) is practically limited to **\( r \le 30 \)**  
+- The column height (<img src="https://latex.codecogs.com/svg.latex?r" />) is practically limited to **<img src="https://latex.codecogs.com/svg.latex?r%20%5Cle%2030" />**  
 - Runtime grows rapidly with `r`  
 - Large `c` values are feasible when `r` is small  
 
@@ -136,7 +132,7 @@ Where:
 - `r`, `c` = grid dimensions  
 - `o` = number of occupied cells  
 - `a` = number of adjacencies  
-- `count` = exact value of \( m(r,c,o,a) \)  
+- `count` = exact value of <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />  
 
 The final line:
 
@@ -182,11 +178,9 @@ All published data is a direct output of this code.
 
 All enumeration files produced by this project use a **dense CSV format**.
 
-This means that **every** pair \( (o,a) \) with
+This means that **every** pair <img src="https://latex.codecogs.com/svg.latex?%28o%2Ca%29" /> with
 
-\[
-0 \le o \le rc, \qquad 0 \le a \le 2rc - r - c
-\]
+<img src="https://latex.codecogs.com/svg.latex?0%20%5Cle%20o%20%5Cle%20rc%2C%20%5Cqquad%200%20%5Cle%20a%20%5Cle%202rc%20-%20r%20-%20c" />
 
 appears explicitly in the output, including rows with `count = 0`.
 
@@ -208,9 +202,9 @@ Zero-count rows are **not omitted**.
 
 Dense output is used because it:
 
-- Eliminates ambiguity about missing \( (o,a) \) values  
+- Eliminates ambiguity about missing <img src="https://latex.codecogs.com/svg.latex?%28o%2Ca%29" /> values  
 - Simplifies verification and consistency checks  
-- Preserves the full support structure of \( m(r,c,o,a) \)  
+- Preserves the full support structure of <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />  
 - Facilitates theoretical analysis of adjacency bounds  
 
 Sparse (holey) CSV formats are **not used** in this repository.
@@ -223,8 +217,5 @@ All data files are validated using the `verify_csv.py` script, which assumes:
 - A terminating `.DONE.` sentinel line  
 - Exact combinatorial consistency:
 
-\[
-\sum_{o,a} m(r,c,o,a) = 2^{rc}, \qquad
-\sum_a m(r,c,o,a) = \binom{rc}{o}
-\]
+<img src="https://latex.codecogs.com/svg.latex?%5Csum_%7Bo%2Ca%7D%20m%28r%2Cc%2Co%2Ca%29%20%3D%202%5E%7Brc%7D%2C%20%5Cqquad%0A%5Csum_a%20m%28r%2Cc%2Co%2Ca%29%20%3D%20%5Cbinom%7Brc%7D%7Bo%7D" />
 

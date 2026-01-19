@@ -1,10 +1,8 @@
-# CSV Data Dictionary for \( m(r,c,o,a) \) Tables
+# CSV Data Dictionary for <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" /> Tables
 
 This document describes the structure, meaning, and conventions of the CSV files containing exact enumeration data for the combinatorial function
 
-\[
-m(r,c,o,a).
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29." />
 
 Each row of the dataset represents a single value of this function for a specific grid size and parameter combination.
 
@@ -18,7 +16,7 @@ All data files are plain-text CSV (comma-separated values) with the following co
 r, c, o, a, count
 ```
 
-Each row corresponds to one value of \( m(r,c,o,a) \).
+Each row corresponds to one value of <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />.
 
 ---
 
@@ -38,9 +36,7 @@ Each row corresponds to one value of \( m(r,c,o,a) \).
 
 Due to symmetry,
 
-\[
-m(r,c,o,a) = m(c,r,o,a),
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%20%3D%20m%28c%2Cr%2Co%2Ca%29%2C" />
 
 all datasets are generated with r ≤ c.
 
@@ -59,10 +55,7 @@ Special cases:
 
 Boundary values:
 
-\[
-m(r,c,0,0) = 1, \qquad
-m(r,c,rc,2rc-r-c) = 1.
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2C0%2C0%29%20%3D%201%2C%20%5Cqquad%0Am%28r%2Cc%2Crc%2C2rc-r-c%29%20%3D%201." />
 
 ---
 
@@ -81,11 +74,9 @@ Each adjacency corresponds to an edge in the grid graph induced by the occupied 
 - Type: Nonnegative integer (arbitrary precision)  
 - Meaning: The exact value of
 
-\[
-m(r,c,o,a),
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%2C" />
 
-i.e., the number of distinct subsets of \( o \) cells in an \( r \times c \) grid whose induced subgraph has exactly \( a \) edges.
+i.e., the number of distinct subsets of <img src="https://latex.codecogs.com/svg.latex?o" /> cells in an <img src="https://latex.codecogs.com/svg.latex?r%20%5Ctimes%20c" /> grid whose induced subgraph has exactly <img src="https://latex.codecogs.com/svg.latex?a" /> edges.
 
 All counts are exact (not approximate).
 
@@ -101,9 +92,7 @@ A row
 
 means:
 
-\[
-m(6,9,4,2) = 93079.
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%286%2C9%2C4%2C2%29%20%3D%2093079." />
 
 That is, there are 93,079 ways to place 4 occupied cells in a 6×9 grid such that exactly 2 adjacency edges occur.
 
@@ -111,12 +100,12 @@ That is, there are 93,079 ways to place 4 occupied cells in a 6×9 grid such tha
 
 ## Completeness
 
-For each fixed grid size \( (r,c) \), the dataset includes:
+For each fixed grid size <img src="https://latex.codecogs.com/svg.latex?%28r%2Cc%29" />, the dataset includes:
 
-- All values of \( o \in \{0,1,\dots,rc\} \)  
-- All values of \( a \) for which \( m(r,c,o,a) > 0 \)  
+- All values of <img src="https://latex.codecogs.com/svg.latex?o%20%5Cin%20%5C%7B0%2C1%2C%5Cdots%2Crc%5C%7D" />  
+- All values of <img src="https://latex.codecogs.com/svg.latex?a" /> for which <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%20%3E%200" />  
 
-Values for which \( m(r,c,o,a) = 0 \) may be omitted.
+Values for which <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%20%3D%200" /> may be omitted.
 
 ---
 
@@ -151,7 +140,7 @@ These CSV files are suitable for:
 
 ## Summary
 
-Each CSV row records an exact value of the function \( m(r,c,o,a) \), fully specifying:
+Each CSV row records an exact value of the function <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />, fully specifying:
 
 - The grid size  
 - The number of occupied cells  

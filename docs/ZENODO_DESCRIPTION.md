@@ -4,13 +4,11 @@
 
 This dataset provides **exact combinatorial enumeration data** for the function
 
-\[
-m(r,c,o,a),
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%2C" />
 
 the number of ways to place o occupied cells in an r × c rectangular grid such that exactly a horizontal/vertical adjacencies occur between occupied cells.
 
-Each data file contains the full distribution of \( m(r,c,o,a) \) values for a fixed grid size (r,c), computed using a deterministic dynamic-programming (DP) algorithm.
+Each data file contains the full distribution of <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" /> values for a fixed grid size (r,c), computed using a deterministic dynamic-programming (DP) algorithm.
 
 All data are **dense**, **exact**, and **fully verified**.
 
@@ -43,9 +41,9 @@ where:
 - `r`, `c` — grid dimensions  
 - `o` — number of occupied cells  
 - `a` — number of adjacencies  
-- `count` — exact value of \( m(r,c,o,a) \)  
+- `count` — exact value of <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />  
 
-All possible \( (o,a) \) pairs appear explicitly, including rows with `count = 0`.
+All possible <img src="https://latex.codecogs.com/svg.latex?%28o%2Ca%29" /> pairs appear explicitly, including rows with `count = 0`.
 
 Each file ends with the sentinel line:
 
@@ -59,19 +57,12 @@ Each file ends with the sentinel line:
 
 For each grid (r,c), the data satisfy:
 
-\[
-\sum_{o,a} m(r,c,o,a) = 2^{rc},
-\]
-\[
-\sum_a m(r,c,o,a) = \binom{rc}{o},
-\]
+<img src="https://latex.codecogs.com/svg.latex?%5Csum_%7Bo%2Ca%7D%20m%28r%2Cc%2Co%2Ca%29%20%3D%202%5E%7Brc%7D%2C" />
+<img src="https://latex.codecogs.com/svg.latex?%5Csum_a%20m%28r%2Cc%2Co%2Ca%29%20%3D%20%5Cbinom%7Brc%7D%7Bo%7D%2C" />
 
 as well as the boundary conditions:
 
-\[
-m(r,c,0,0) = 1, \qquad
-m(r,c,rc,2rc - r - c) = 1.
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2C0%2C0%29%20%3D%201%2C%20%5Cqquad%0Am%28r%2Cc%2Crc%2C2rc%20-%20r%20-%20c%29%20%3D%201." />
 
 These identities guarantee that every subset of grid cells is counted exactly once.
 
@@ -100,8 +91,8 @@ Every CSV file is validated using an automated verification pipeline that checks
 - File format and sentinel correctness  
 - Dense row structure  
 - Value ranges  
-- Global sum: \( 2^{rc} \)  
-- Per-o sums: \( \binom{rc}{o} \)  
+- Global sum: <img src="https://latex.codecogs.com/svg.latex?2%5E%7Brc%7D" />  
+- Per-o sums: <img src="https://latex.codecogs.com/svg.latex?%5Cbinom%7Brc%7D%7Bo%7D" />  
 - Boundary conditions  
 
 The verification scripts are included in:
@@ -121,7 +112,7 @@ docs/VERIFICATION_METHODOLOGY.md
 
 ## Theoretical Context
 
-The function \( m(r,c,o,a) \) arises in the study of:
+The function <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" /> arises in the study of:
 
 - Induced subgraphs of grid graphs  
 - Adjacency-constrained configurations  
