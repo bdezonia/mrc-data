@@ -12,9 +12,6 @@ Hard checks:
   - sum_a(o) = C(r*c, o)
   - boundary values
 
-Soft checks (reported, not fatal):
-  - amin_closed_form vs amin_bound
-  - amax vs actual support
 """
 
 import csv
