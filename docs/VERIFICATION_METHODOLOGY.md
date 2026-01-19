@@ -2,11 +2,9 @@
 
 This repository provides **exact enumeration data** for the combinatorial function
 
-\[
-m(r,c,o,a),
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />
 
-the number of ways to place \( o \) occupied cells in an \( r \times c \) grid such that exactly \( a \) horizontal/vertical adjacencies occur.
+the number of ways to place o occupied cells in an \( r \times c \) grid such that exactly \( a \) horizontal/vertical adjacencies occur.
 
 To ensure correctness, all data files are subjected to a strict, reproducible **verification pipeline**.  
 This document describes the methodology used to validate every CSV file in the dataset.
@@ -19,7 +17,7 @@ The verification process focuses on **data integrity**, not on enforcing theoret
 
 Specifically, it checks that each file:
 
-- Represents a complete enumeration of all \( 2^{rc} \) subsets  
+- Represents a complete enumeration of all <img src="https://latex.codecogs.com/svg.latex?2%5E%7Brc%7D" /> subsets  
 - Uses a consistent and documented CSV format  
 - Satisfies core combinatorial identities  
 - Contains no malformed, missing, or corrupted entries  
@@ -45,13 +43,13 @@ Where:
 - `r`, `c` — grid dimensions  
 - `o` — number of occupied cells  
 - `a` — number of adjacencies  
-- `count` — exact value of \( m(r,c,o,a) \)  
+- `count` — exact value of <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />  
 
 ### Dense Format
 
 All files are **dense**:
 
-- Every \( (o,a) \) pair appears  
+- Every <img src="https://latex.codecogs.com/svg.latex?%28o%2Ca%29" /> pair appears  
 - Zero-count rows are included  
 - No rows are omitted  
 
@@ -115,13 +113,13 @@ This confirms that **every subset of grid cells** is counted exactly once.
 
 ### 3.5 Per-Occupancy Sums
 
-For each \( o \), the data must satisfy:
+For each o, the data must satisfy:
 
 \[
 \sum_a m(r,c,o,a) = \binom{rc}{o}.
 \]
 
-This ensures that all subsets of size \( o \) are correctly enumerated.
+This ensures that all subsets of size o are correctly enumerated.
 
 ---
 
@@ -166,8 +164,8 @@ These scripts:
 
 In addition to data integrity checks, the verifier reports:
 
-- Differences between closed-form \( a_{\min}(r,c,o) \) and the true bipartite lower bound  
-- Differences between closed-form \( a_{\max}(r,c,o) \) and observed support  
+- Differences between closed-form <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D%28r%2Cc%2Co%29" /> and the true bipartite lower bound  
+- Differences between closed-form <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D%28r%2Cc%2Co%29" /> and observed support  
 
 These diagnostics:
 

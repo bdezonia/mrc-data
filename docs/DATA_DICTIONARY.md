@@ -27,13 +27,13 @@ Each row corresponds to one value of \( m(r,c,o,a) \).
 ### 1. `r` — Number of Rows
 
 - Type: Integer  
-- Range: \( r \ge 1 \)  
+- Range: r ≥ 1  
 - Meaning: The number of rows in the grid.
 
 ### 2. `c` — Number of Columns
 
 - Type: Integer  
-- Range: \( c \ge 1 \)  
+- Range: c ≥ 1  
 - Meaning: The number of columns in the grid.
 
 Due to symmetry,
@@ -42,14 +42,14 @@ Due to symmetry,
 m(r,c,o,a) = m(c,r,o,a),
 \]
 
-all datasets are generated with \( r \le c \).
+all datasets are generated with r ≤ c.
 
 ---
 
 ### 3. `o` — Occupied Cells
 
 - Type: Integer  
-- Range: \( 0 \le o \le rc \)  
+- Range: <img src="https://latex.codecogs.com/svg.latex?0%20%5Cle%20o%20%5Cle%20rc" />  
 - Meaning: The number of occupied cells (selected vertices) in the grid.
 
 Special cases:
@@ -69,7 +69,7 @@ m(r,c,rc,2rc-r-c) = 1.
 ### 4. `a` — Adjacency Count
 
 - Type: Integer  
-- Range: \( 0 \le a \le 2rc - r - c \)  
+- Range: <img src="https://latex.codecogs.com/svg.latex?0%20%5Cle%20a%20%5Cle%202rc%20-%20r%20-%20c" />  
 - Meaning: The number of horizontal/vertical adjacencies between occupied cells.
 
 Each adjacency corresponds to an edge in the grid graph induced by the occupied cells.
@@ -131,7 +131,7 @@ Values for which \( m(r,c,o,a) = 0 \) may be omitted.
 
 ## Known Conventions
 
-1. Grids are always stored with \( r \le c \).  
+1. Grids are always stored with r ≤ c.  
 2. Only nonzero counts are included.  
 3. Files are named by grid size (e.g., `r6_c9.csv`).  
 4. The column order is always `r, c, o, a, count`.  

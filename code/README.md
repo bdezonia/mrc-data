@@ -1,4 +1,4 @@
-# Java Dynamic Programming Enumerator for \( m(r,c,o,a) \)
+# Java Dynamic Programming Enumerator for m(r,c,o,a)
 
 This directory contains a Java implementation of an exact dynamic-programming (DP) algorithm for computing the combinatorial function
 
@@ -6,7 +6,7 @@ This directory contains a Java implementation of an exact dynamic-programming (D
 m(r,c,o,a),
 \]
 
-the number of ways to place \( o \) occupied cells in an \( r \times c \) grid such that exactly \( a \) horizontal/vertical adjacencies occur.
+the number of ways to place o occupied cells in an r × c grid such that exactly a horizontal/vertical adjacencies occur.
 
 The implementation is designed for **exact enumeration** using arbitrary-precision arithmetic and supports multi-threaded batch execution.
 
@@ -20,8 +20,8 @@ Core DP engine that:
 
 - Implements a column-by-column (row-extension) dynamic program  
 - Tracks:
-  - Occupied cell count \( o \)  
-  - Adjacency count \( a \)  
+  - Occupied cell count o  
+  - Adjacency count a  
 - Uses `BigInteger` for exact arithmetic  
 - Outputs dense CSV tables with a `.DONE.` sentinel line  
 
@@ -87,8 +87,8 @@ Each column is represented by a bitmask of length `r` indicating which cells are
 
 For each column state, the DP tracks:
 
-- Total occupied cells so far \( o \)
-- Total adjacencies so far \( a \)
+- Total occupied cells so far o
+- Total adjacencies so far a
 
 Transitions between consecutive columns account for:
 

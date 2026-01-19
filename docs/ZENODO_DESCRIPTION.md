@@ -8,9 +8,9 @@ This dataset provides **exact combinatorial enumeration data** for the function
 m(r,c,o,a),
 \]
 
-the number of ways to place \( o \) occupied cells in an \( r \times c \) rectangular grid such that exactly \( a \) horizontal/vertical adjacencies occur between occupied cells.
+the number of ways to place o occupied cells in an r × c rectangular grid such that exactly a horizontal/vertical adjacencies occur between occupied cells.
 
-Each data file contains the full distribution of \( m(r,c,o,a) \) values for a fixed grid size \( (r,c) \), computed using a deterministic dynamic-programming (DP) algorithm.
+Each data file contains the full distribution of \( m(r,c,o,a) \) values for a fixed grid size (r,c), computed using a deterministic dynamic-programming (DP) algorithm.
 
 All data are **dense**, **exact**, and **fully verified**.
 
@@ -57,7 +57,7 @@ Each file ends with the sentinel line:
 
 ## Data Properties
 
-For each grid \( (r,c) \), the data satisfy:
+For each grid (r,c), the data satisfy:
 
 \[
 \sum_{o,a} m(r,c,o,a) = 2^{rc},
@@ -79,14 +79,14 @@ These identities guarantee that every subset of grid cells is counted exactly on
 
 ## Method of Generation
 
-All values were computed using a custom **Java dynamic-programming algorithm** that enumerates all subsets of an \( r \times c \) grid and tracks the number of induced adjacencies.
+All values were computed using a custom **Java dynamic-programming algorithm** that enumerates all subsets of an r × c grid and tracks the number of induced adjacencies.
 
 Key features:
 
 - Deterministic computation  
 - Exact integer arithmetic  
 - No sampling or approximation  
-- Symmetry exploitation (\( m(r,c,o,a) = m(c,r,o,a) \))  
+- Symmetry exploitation <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%3Dm%28c%2Cr%2Co%2Ca%29" />  
 - Multi-threaded scheduling for larger grids  
 
 The code used to generate the data is included in the repository.
@@ -101,7 +101,7 @@ Every CSV file is validated using an automated verification pipeline that checks
 - Dense row structure  
 - Value ranges  
 - Global sum: \( 2^{rc} \)  
-- Per-\( o \) sums: \( \binom{rc}{o} \)  
+- Per-o sums: \( \binom{rc}{o} \)  
 - Boundary conditions  
 
 The verification scripts are included in:

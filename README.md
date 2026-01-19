@@ -1,4 +1,4 @@
-# Exact Enumeration Data for \( m(r,c,o,a) \)
+# Exact Enumeration Data for m(r,c,o,a)
 
 ## Overview
 
@@ -8,7 +8,7 @@ This repository contains exact enumeration data for the combinatorial function
 m(r,c,o,a),
 \]
 
-the number of ways to place \( o \) occupied cells in an \( r \times c \) grid such that exactly \( a \) horizontal/vertical adjacencies occur between occupied cells.
+the number of ways to place o occupied cells in an r × c grid such that exactly a horizontal/vertical adjacencies occur between occupied cells.
 
 Here:
 
@@ -27,8 +27,8 @@ These tables were generated using optimized dynamic-programming enumeration meth
 
 ## Mathematical Definition
 
-Let \( G_{r,c} \) be the \( r \times c \) rectangular grid graph.
-Then \( m(r,c,o,a) \) counts subsets of \( o \) vertices whose induced subgraph contains exactly \( a \) edges.
+Let \( G_{r,c} \) be the r × c rectangular grid graph.
+Then \( m(r,c,o,a) \) counts subsets of o vertices whose induced subgraph contains exactly a edges.
 
 Boundary conditions:
 
@@ -88,14 +88,14 @@ All tables were computed using exact dynamic programming over grid column states
 
 The algorithms were designed for correctness and completeness, not merely approximation.
 
-For small grids, all values of \( o \) and \( a \) are enumerated exhaustively.
+For small grids, all values of o and a are enumerated exhaustively.
 
 ---
 
 ## Known Notes & Edge Cases
 
 - Very small grids (e.g. \( 3 \times 3 \)) may exhibit degenerate behavior due to boundary constraints.
-- For \( r,c \ge 5 \), the distributions of \( a \) become well-behaved and suitable for asymptotic modeling.
+- For \( r,c \ge 5 \), the distributions of a become well-behaved and suitable for asymptotic modeling.
 - The case \( o=0 \) always satisfies \( m(r,c,0,0)=1 \).
 
 Any detected discrepancies are documented in the commit history.
