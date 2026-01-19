@@ -44,7 +44,7 @@ This bound is **always correct** and is used by the verifier.
 
 ### Closed‑Form Approximation
 
-The closed‑form  a_{\min}(r,c,o)  formula used in the accompanying theory assumes an initial slope of approximately **3** above  \alpha  for typical 2D grids.
+The closed‑form  <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" />(r,c,o)  formula used in the accompanying theory assumes an initial slope of approximately **3** above  <img src="https://latex.codecogs.com/svg.latex?%5Calpha" />  for typical 2D grids.
 
 However, this approximation fails for certain geometries, especially:
 
