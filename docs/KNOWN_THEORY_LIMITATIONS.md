@@ -62,7 +62,7 @@ Therefore:
 
 ## 3. Upper Adjacency Bound <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />
 
-The closed‑form  a_{\max}(r,c,o)  formula is based on rectangular block‑packing arguments.
+The closed‑form  <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />(r,c,o)  formula is based on rectangular block‑packing arguments.
 
 It is accurate for most large, “bulk” 2D grids, but mismatches occur for:
 
