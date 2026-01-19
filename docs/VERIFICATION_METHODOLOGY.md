@@ -4,7 +4,7 @@ This repository provides **exact enumeration data** for the combinatorial functi
 
 <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" />
 
-the number of ways to place o occupied cells in an \( r \times c \) grid such that exactly \( a \) horizontal/vertical adjacencies occur.
+the number of ways to place o occupied cells in an <img src="https://latex.codecogs.com/svg.latex?r%20%5Ctimes%20c" /> grid such that exactly <img src="https://latex.codecogs.com/svg.latex?a" /> horizontal/vertical adjacencies occur.
 
 To ensure correctness, all data files are subjected to a strict, reproducible **verification pipeline**.  
 This document describes the methodology used to validate every CSV file in the dataset.
@@ -22,7 +22,7 @@ Specifically, it checks that each file:
 - Satisfies core combinatorial identities  
 - Contains no malformed, missing, or corrupted entries  
 
-Theoretical bounds (such as closed-form \( a_{\min} \) and \( a_{\max} \)) are treated as **diagnostic tools**, not correctness requirements.
+Theoretical bounds (such as closed-form <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" /> and <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />) are treated as **diagnostic tools**, not correctness requirements.
 
 ---
 
@@ -81,11 +81,7 @@ All rows must have identical `r` and `c` values.
 
 Each row must satisfy:
 
-\[
-0 \le o \le rc, \qquad
-0 \le a \le 2rc - r - c, \qquad
-count \ge 0.
-\]
+<img src="https://latex.codecogs.com/svg.latex?0%20%5Cle%20o%20%5Cle%20rc%2C%20%5Cqquad%0A0%20%5Cle%20a%20%5Cle%202rc%20-%20r%20-%20c%2C%20%5Cqquad%0Acount%20%5Cge%200." />
 
 ---
 
@@ -93,9 +89,7 @@ count \ge 0.
 
 The total number of data rows must equal:
 
-\[
-(rc + 1)(2rc - r - c + 1).
-\]
+<img src="https://latex.codecogs.com/svg.latex?%28rc%20%2B%201%29%282rc%20-%20r%20-%20c%20%2B%201%29." />
 
 ---
 
@@ -103,9 +97,7 @@ The total number of data rows must equal:
 
 The sum of all counts must satisfy:
 
-\[
-\sum_{o,a} m(r,c,o,a) = 2^{rc}.
-\]
+<img src="https://latex.codecogs.com/svg.latex?%5Csum_%7Bo%2Ca%7D%20m%28r%2Cc%2Co%2Ca%29%20%3D%202%5E%7Brc%7D." />
 
 This confirms that **every subset of grid cells** is counted exactly once.
 
@@ -115,9 +107,7 @@ This confirms that **every subset of grid cells** is counted exactly once.
 
 For each o, the data must satisfy:
 
-\[
-\sum_a m(r,c,o,a) = \binom{rc}{o}.
-\]
+<img src="https://latex.codecogs.com/svg.latex?%5Csum_a%20m%28r%2Cc%2Co%2Ca%29%20%3D%20%5Cbinom%7Brc%7D%7Bo%7D." />
 
 This ensures that all subsets of size o are correctly enumerated.
 
@@ -128,13 +118,9 @@ This ensures that all subsets of size o are correctly enumerated.
 The extreme configurations must be present:
 
 - Empty grid:
-  \[
-  m(r,c,0,0) = 1
-  \]
+  <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2C0%2C0%29%20%3D%201" />
 - Fully occupied grid:
-  \[
-  m(r,c,rc,2rc - r - c) = 1
-  \]
+  <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Crc%2C2rc%20-%20r%20-%20c%29%20%3D%201" />
 
 ---
 

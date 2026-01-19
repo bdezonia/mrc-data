@@ -4,17 +4,15 @@
 
 This repository contains exact enumeration data for the combinatorial function
 
-\[
-m(r,c,o,a),
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%2C" />
 
 the number of ways to place o occupied cells in an r × c grid such that exactly a horizontal/vertical adjacencies occur between occupied cells.
 
 Here:
 
-- \( r, c \ge 1 \) are the grid dimensions
-- \( 0 \le o \le rc \) is the number of occupied cells
-- \( 0 \le a \le 2rc - r - c \) is the number of adjacencies
+- <img src="https://latex.codecogs.com/svg.latex?r%2C%20c%20%5Cge%201" /> are the grid dimensions
+- <img src="https://latex.codecogs.com/svg.latex?0%20%5Cle%20o%20%5Cle%20rc" /> is the number of occupied cells
+- <img src="https://latex.codecogs.com/svg.latex?0%20%5Cle%20a%20%5Cle%202rc%20-%20r%20-%20c" /> is the number of adjacencies
 
 These tables were generated using optimized dynamic-programming enumeration methods and are intended for:
 
@@ -27,21 +25,16 @@ These tables were generated using optimized dynamic-programming enumeration meth
 
 ## Mathematical Definition
 
-Let \( G_{r,c} \) be the r × c rectangular grid graph.
-Then \( m(r,c,o,a) \) counts subsets of o vertices whose induced subgraph contains exactly a edges.
+Let <img src="https://latex.codecogs.com/svg.latex?G_%7Br%2Cc%7D" /> be the r × c rectangular grid graph.
+Then <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29" /> counts subsets of o vertices whose induced subgraph contains exactly a edges.
 
 Boundary conditions:
 
-\[
-m(r,c,0,0) = 1, \qquad
-m(r,c,rc,2rc-r-c) = 1.
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2C0%2C0%29%20%3D%201%2C%20%5Cqquad%0Am%28r%2Cc%2Crc%2C2rc-r-c%29%20%3D%201." />
 
 Symmetry:
 
-\[
-m(r,c,o,a) = m(c,r,o,a).
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2Co%2Ca%29%20%3D%20m%28c%2Cr%2Co%2Ca%29." />
 
 ---
 
@@ -71,9 +64,7 @@ Example:
 
 meaning:
 
-\[
-m(6,9,4,2) = 93079.
-\]
+<img src="https://latex.codecogs.com/svg.latex?m%286%2C9%2C4%2C2%29%20%3D%2093079." />
 
 ---
 
@@ -81,7 +72,7 @@ m(6,9,4,2) = 93079.
 
 All tables were computed using exact dynamic programming over grid column states, with:
 
-- Symmetry reduction \( r \le c \)
+- Symmetry reduction <img src="https://latex.codecogs.com/svg.latex?r%20%5Cle%20c" />
 - Bitmask representations of column occupancy
 - Edge-tracking for adjacency counts
 - Arbitrary-precision integer arithmetic
@@ -94,9 +85,9 @@ For small grids, all values of o and a are enumerated exhaustively.
 
 ## Known Notes & Edge Cases
 
-- Very small grids (e.g. \( 3 \times 3 \)) may exhibit degenerate behavior due to boundary constraints.
-- For \( r,c \ge 5 \), the distributions of a become well-behaved and suitable for asymptotic modeling.
-- The case \( o=0 \) always satisfies \( m(r,c,0,0)=1 \).
+- Very small grids (e.g. <img src="https://latex.codecogs.com/svg.latex?3%20%5Ctimes%203" />) may exhibit degenerate behavior due to boundary constraints.
+- For <img src="https://latex.codecogs.com/svg.latex?r%2Cc%20%5Cge%205" />, the distributions of a become well-behaved and suitable for asymptotic modeling.
+- The case <img src="https://latex.codecogs.com/svg.latex?o%3D0" /> always satisfies <img src="https://latex.codecogs.com/svg.latex?m%28r%2Cc%2C0%2C0%29%3D1" />.
 
 Any detected discrepancies are documented in the commit history.
 
