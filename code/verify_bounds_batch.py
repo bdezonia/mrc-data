@@ -17,7 +17,7 @@ import sys
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python verify_batch.py <directory>")
+        print("Usage: python3 verify_bounds_batch.py <directory>")
         sys.exit(1)
 
     root = sys.argv[1]
@@ -35,7 +35,7 @@ def main():
     for path in csv_files:
         print("=" * 72)
         print(f"Checking {path}")
-        proc = subprocess.run(["python3", "verify_csv.py", path], text=True)
+        proc = subprocess.run(["python3", "verify_bounds.py", path], text=True)
         if proc.returncode == 0:
             ok.append(path)
         else:
