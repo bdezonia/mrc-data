@@ -101,7 +101,15 @@ If you use this data, please cite:
 
 ### Related publication
 
-The exact formulas for \( a_{\min}(r,c,o) \) and \( a_{\max}(r,c,o) \) used to validate this dataset are presented in:
+The exact formulas for
+
+ <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" />(r,c,o) 
+
+  and
+
+ <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />(r,c,o) 
+
+ used to validate this dataset are presented in:
 
 **Barry DeZonia**, *Exact Adjacency Bounds for Rectangular Grid Subsets*, [HAL preprint hal-05466387 (2026)](https://hal.science/hal-05466387).
 

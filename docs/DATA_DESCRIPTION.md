@@ -158,9 +158,7 @@ appropriate credit is given to the author.
 
 If you use this dataset, please cite:
 
-> Barry DeZonia, *Exact Enumeration Data for the Grid Adjacency Function m(r,c,o,a)*, Zenodo, Year, DOI.
-
-(To be replaced with the actual DOI once Zenodo assigns it)
+> Barry DeZonia, *Exact Enumeration Data for the Grid Adjacency Function m(r,c,o,a)*, https://github.com/bdezonia/mrc-data.git, <year of your use>.
 
 ---
 
