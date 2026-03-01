@@ -45,7 +45,6 @@ mrc-data/
 ├── code/        # DP generators and utilities
 ├── data/        # CSV tables for each (r,c)
 ├── docs/        # Misc documentation about this project
-├── releases/    # Frozen DP release sets referencable as needed
 ├── README.md
 └── CITATION.bib
 ```
@@ -100,7 +99,11 @@ If you use this data, please cite:
 > DeZonia, B. (2026). *Exact enumeration tables for grid occupancy adjacencies*.
 > GitHub repository: https://github.com/bdezonia/mrc-data
 
-For archival versions associated with publications, a DOI-linked snapshot will be provided via Zenodo.
+### Related publication
+
+The exact formulas for \( a_{\min}(r,c,o) \) and \( a_{\max}(r,c,o) \) used to validate this dataset are presented in:
+
+**Barry DeZonia**, *Exact Adjacency Bounds for Rectangular Grid Subsets*, [HAL preprint hal-05466387 (2026)](https://hal.science/hal-05466387).
 
 ---
 
