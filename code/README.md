@@ -168,7 +168,7 @@ This code depends on:
 
 ## Purpose
 
-This Java implementation is the primary tool used to generate the exact enumeration datasets published in this repository and archived via Zenodo.
+This Java implementation is the primary tool used to generate the exact enumeration datasets published in this repository.
 
 All published data is a direct output of this code.
 
