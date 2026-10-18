@@ -1,0 +1,11 @@
+r,c,algorithm,modulus,time_seconds,peak_rss_kib,environment,notes
+7,9,butterfly,2147483647,0.036,8228,assistant_container,unpruned one-prime
+7,9,naive,2147483647,0.114,8128,assistant_container,traditional dense mask-pair
+8,10,butterfly,2147483647,0.158,23076,assistant_container,unpruned one-prime
+9,12,butterfly,2147483647,0.856,81868,assistant_container,unpruned one-prime
+10,12,butterfly,2147483647,2.300,200892,assistant_container,unpruned one-prime
+11,13,butterfly,2147483647,10.233,573896,assistant_container,unpruned one-prime
+11,13,butterfly,2147483647,14.619,573896,assistant_container,pruned one-prime subsequent run timing variability
+12,12,butterfly,2147483647,25.223,1156972,assistant_container,unpruned one-prime
+12,12,butterfly,2147483647,13.493,1156948,assistant_container,pruned one-prime
+10,12,butterfly+CRT,multiple,11.48,200896,assistant_container,complete four primes plus CRT overall wall
