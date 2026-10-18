@@ -1,2 +1,6 @@
 __pycache__
 *.class
+mrc_batch.log
+mrc_batch_status.tsv
+.mrc_batch.lock
+.mrc_crt_cache
