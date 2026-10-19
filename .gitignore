@@ -4,3 +4,4 @@ mrc_batch.log
 mrc_batch_status.tsv
 .mrc_batch.lock
 .mrc_crt_cache
+code/data-generation/c++/mrc_fast_transform
