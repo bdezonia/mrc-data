@@ -1,0 +1,23 @@
+MRC Fast Butterfly v2 Ragged - verified 2026-10-20 in the tool environment
+
+1. Exact generator self-test: ALL TESTS PASS.
+2. Modular comparison against original dense C++ kernel:
+   1x1, 1x5, 2x2, 2x6, 3x5, 4x8, 5x7, 6x9, 7x9, 8x10, 9x12, 10x12:
+   BYTE-FOR-BYTE modular output equality for checked primes.
+3. 10x12 full CRT exact CSV: BYTE-FOR-BYTE MATCH to archived 10.12.csv
+   (525378 bytes).
+4. 12x12 one-prime modular: all 38425 coefficients match archived
+   12.12.csv modulo prime 2147483647.
+5. v2 13x13 one prime: completed in 18.52 s, 1,040,828 KiB max RSS.
+6. New batch runner tested 1<=r<=3,r<=c<=3; 6 zero-byte .DONE files.
+   Subsequent rerun: all 6 skipped as already_done.
+
+Single-prime benchmark; results depend on CPU and are not full CRT runtimes:
+rectangle      dense_s   ragged_s  dense_RSS_KiB ragged_RSS_KiB
+9x12             0.94       0.39          81868         28816
+10x12            2.26       1.46         200896         68500
+11x13            7.58       3.58         573772        189528
+12x12           14.77       8.88        1156948        382332
+
+These benchmarks do not prove large-width performance; no tests run at
+15x29 or 15x40 in this memory-restricted container.
