@@ -1,6 +1,6 @@
 # Exact statistics from `mrc_data`
 
-`mrc_data_statistics.py` reads a **finished** MRC data table and summarizes the distribution of occupied-neighbor couplings for one fixed `(r,c,o)` at an observed `a`. It **does not run enumeration, transfer matrices, or DP**. Requires only Python 3.9+ (no dependencies).
+`mrc_data_statistics.py` reads **finished** MRC data tables and summarizes the distribution of occupied-neighbor couplings for one `(r,c,o,a)` request **or thousands of observations in batch**. It **does not run enumeration, transfer matrices, or DP**. Requires only Python 3.9+ (no dependencies).
 
 ## Run
 
@@ -43,6 +43,7 @@ python3 mrc_data_statistics.py 6 8 12 14 --data-dir ~/dev/mrc-data/data --export
 python3 mrc_data_statistics.py 6 8 12 14 --data-dir ~/dev/mrc-data/data --precision 30
 
 # Test against independent, exhaustively enumerated 1x1, 1x4, 2x2, 2x3, 3x3 grids
+# plus batch processing and optimized-exact-tail consistency checks
 python3 -m unittest -v test_mrc_data_statistics.py
 ```
 
@@ -52,6 +53,53 @@ If your data directory is always the same, you can set:
 export MRC_DATA_DIR=~/dev/mrc-data/data
 python3 mrc_data_statistics.py 6 8 12 14
 ```
+
+## Batch processing (many observed images or grid measurements)
+
+Prepare a standard CSV with **at least** the four columns `r,c,o,a`:
+
+```csv
+sample_id,r,c,o,a,site
+Forest_A,6,8,12,14,west
+Forest_B,6,8,12,17,east
+Forest_C,8,10,25,32,north
+```
+
+The order of columns does not matter. Additional columns (sample IDs, study names, coordinates, timestamps, etc.) are retained unchanged in the output. Avoid naming any input column `mrc_status`, `mrc_pmf`, or another reserved `mrc_...` result field.
+
+```bash
+python3 mrc_data_statistics.py \
+    --batch observations.csv \
+    --output results.csv \
+    --data-dir ~/dev/mrc-data/data
+```
+
+The output is a CSV with **one row per input record, in original order**. All original fields are preserved, and calculated columns are prefixed `mrc_`:
+
+- `mrc_status` = `ok` or `error` and `mrc_error` gives the reason for a failed observation.
+- `mrc_source` is the MRC table used (the implementation finds either `r.c.csv` or `c.r.csv`).
+- `mrc_count`, `mrc_total_placements`, `mrc_attainable`, `mrc_amin`, `mrc_amax`, `mrc_possible_edges`, `mrc_support_size`.
+- `mrc_mean`, `mrc_variance`, `mrc_stddev`, `mrc_z_score`, `mrc_z_min`, `mrc_z_max`, `mrc_bounded_aggregation`, `mrc_bounded_centered_deviation`.
+- `mrc_pmf`, `mrc_cdf_le`, `mrc_tail_ge`, strict tails (`mrc_tail_lt`, `mrc_tail_gt`), `mrc_midrank_percentile`, and both exact two-sided p-value definitions.
+- Exact fraction text alongside major probabilities: `mrc_pmf_fraction`, `mrc_cdf_le_fraction`, `mrc_tail_ge_fraction`, `mrc_midrank_percentile_fraction`, and two-sided p-value fraction columns, e.g. `17/126`.
+- `mrc_modes`, `mrc_median` and other quantiles (`mrc_q025`, `mrc_q05`, `mrc_q25`, `mrc_q75`, `mrc_q95`, `mrc_q975`).
+
+The percentile column is a **unit fraction** on `[0,1]` (e.g. `0.95` = 95th percentile), matching the single-query JSON output. Decimal probabilities are rounded for display to `--precision` significant digits (default 16); the `..._fraction` columns are exact reduced rational numbers. Undefined quantities (e.g. a z-score when variance is zero, or a bounded score for an unattainable `a`) are left blank.
+
+**Performance:** For each distinct rectangle, the input data file is scanned only **once**, even if many occupancy levels are requested. A validated statistical profile is constructed only once per `(unordered shape, occupancy)` and reused for every observation with that combination. The input batch and output rows are held in memory, while tables are released between rectangle shapes. Because every source file is read through to its `.DONE.` marker and every requested occupancy is checked, incomplete tables are never accepted.
+
+**Failure behavior:** The output is still written when individual records fail, with their errors recorded in `mrc_error` and their statistical fields blank. Missing, incomplete, or corrupt tables cause errors on their dependent records; the tool never extrapolates. The process exit status is `0` for all-success, `1` when one or more individual records failed (output produced), and `2` for command or input/output errors.
+
+**Try the included synthetic example** (the small `sample_data/3.3.csv` table was independently enumerated for testing, not pulled from your archive):
+
+```bash
+python3 mrc_data_statistics.py \
+    --batch example_observations.csv \
+    --output example_results.csv \
+    --data-dir sample_data
+```
+
+**Multiple comparisons:** If a study reports many hypothesis tests, individual exact p-values do not automatically account for multiplicity (e.g. family-wise error or false discovery rates). Appropriate correction depends on the study design, especially spatial dependence. The tool currently reports unadjusted exact p-values and leaves multiple-testing correction to the analysis protocol.
 
 ## Measures and interpretation
 
