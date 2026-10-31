@@ -8,7 +8,9 @@ The null model uniformly selects o occupied cells from an r x c rectangle.
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_left, bisect_right
 import csv
+from dataclasses import dataclass
 from decimal import Decimal, localcontext
 from fractions import Fraction
 from math import comb
@@ -16,7 +18,7 @@ import json
 import os
 from pathlib import Path
 import sys
-from typing import Dict, Optional
+from typing import Dict, Optional, Iterable
 
 
 class MRCDataError(Exception):
@@ -35,17 +37,19 @@ def locate_csv(directory: Path, r: int, c: int) -> Path:
     )
 
 
-def read_occupancy(path: Path, r: int, c: int, o: int) -> Dict[int, int]:
-    """Scan a completed CSV, retaining only counts for occupancy o.
+def read_occupancies(path: Path, r: int, c: int,
+                     occupancies: Iterable[int]) -> Dict[int, Dict[int, int]]:
+    """Read several occupancies in ONE scan of the table, checking .DONE.
 
-    Accept sparse or dense records: omitted a entries mean zero only if the
-    occupancy's count sum passes the exact normalization check below.
-    The inline .DONE. is mandatory: a half-written file must not pass silently.
-    A companion .DONE file, when present, is not a substitute for inline EOF.
+    Only requested occupancies are retained; all records are checked for
+    well-formedness, legal counts, and dimensions. Sparse and dense accepted.
     """
-    counts: Dict[int, int] = {}
-    dims = {(r, c), (c, r)}
+    requested = set(occupancies)
     n = r * c
+    if any(not 0 <= o <= n for o in requested):
+        raise MRCDataError(f"Requested occupancy outside [0,{n}]")
+    counts = {o: {} for o in requested}
+    dims = {(r, c), (c, r)}
     max_edges = 2 * n - r - c
     done = False
     try:
@@ -62,7 +66,6 @@ def read_occupancy(path: Path, r: int, c: int, o: int) -> Dict[int, int]:
                     continue
                 if row == [".DONE."]:
                     done = True
-                    # Only whitespace is permitted beyond the sentinel.
                     for tail in reader:
                         if tail and any(cell.strip() for cell in tail):
                             raise MRCDataError(
@@ -85,26 +88,32 @@ def read_occupancy(path: Path, r: int, c: int, o: int) -> Dict[int, int]:
                     )
                 if not (0 <= oo <= n and 0 <= aa <= max_edges and count >= 0):
                     raise MRCDataError(f"Out-of-range row {line_num} in {path}")
-                if oo == o:
-                    if aa in counts:
+                if oo in requested:
+                    if aa in counts[oo]:
                         raise MRCDataError(
-                            f"Duplicate occupancy/coupling entry ({o},{aa}) in {path}"
+                            f"Duplicate occupancy/coupling entry ({oo},{aa}) in {path}"
                         )
-                    counts[aa] = count
+                    counts[oo][aa] = count
     except OSError as exc:
         raise MRCDataError(f"Could not read {path}: {exc}") from exc
     if not done:
         raise MRCDataError(f"No terminal .DONE. sentinel in {path}; file may be incomplete")
-    if not counts:
-        raise MRCDataError(f"No records for occupancy o={o} in {path}")
-    total = sum(counts.values())
-    expected = comb(n, o)
-    if total != expected:
-        raise MRCDataError(
-            f"Normalization FAILED at occupancy {o} in {path}: "
-            f"sum_a m={total}, expected C({n},{o})={expected}"
-        )
+    for o in requested:
+        if not counts[o]:
+            raise MRCDataError(f"No records for occupancy o={o} in {path}")
+        actual = sum(counts[o].values())
+        expected = comb(n, o)
+        if actual != expected:
+            raise MRCDataError(
+                f"Normalization FAILED at occupancy {o} in {path}: "
+                f"sum_a m={actual}, expected C({n},{o})={expected}"
+            )
     return counts
+
+
+def read_occupancy(path: Path, r: int, c: int, o: int) -> Dict[int, int]:
+    """Compatibility wrapper for one occupancy."""
+    return read_occupancies(path, r, c, [o])[o]
 
 
 def falling_probability(k: int, n: int, o: int) -> Fraction:
@@ -180,22 +189,43 @@ def quantile(sorted_nonzero: list, countmap: Dict[int, int], total: int,
     return sorted_nonzero[-1]
 
 
-def calculate_statistics(r: int, c: int, o: int, a: int,
-                         countmap: Dict[int, int], precision: int = 16) -> dict:
+@dataclass
+class DistributionProfile:
+    """Validated occupancy distribution, reusable for any observed coupling a."""
+    r: int
+    c: int
+    o: int
+    counts: Dict[int, int]
+    total: int
+    support: list
+    cumulative: list
+    sorted_masses: list
+    mass_cumulative: list
+    amin: int
+    amax: int
+    mean: Fraction
+    variance: Fraction
+    modes: list
+    quantiles: dict
+    formatted_by_precision: dict
+
+
+def prepare_distribution(r: int, c: int, o: int,
+                         countmap: Dict[int, int]) -> DistributionProfile:
+    """Validate once, then answer many a queries using binary searches."""
     n = r * c
-    total = comb(n, o)
+    if r <= 0 or c <= 0 or not 0 <= o <= n:
+        raise MRCDataError("Invalid dimensions or occupancy")
     edges = 2 * n - r - c
-    if not (r > 0 and c > 0 and 0 <= o <= n and 0 <= a <= edges):
-        raise MRCDataError("Invalid dimensions, occupancy, or coupling count")
+    if any(not 0 <= k <= edges or v < 0 for k, v in countmap.items()):
+        raise MRCDataError("Invalid coupling index or count in distribution")
+    total = comb(n, o)
     if sum(countmap.values()) != total:
         raise MRCDataError("Occupancy distribution is not normalized")
-    nonzero = sorted(k for k, v in countmap.items() if v > 0)
-    if not nonzero:
+    support = sorted(k for k, v in countmap.items() if v > 0)
+    if not support:
         raise MRCDataError("No attainable coupling counts for this occupancy")
-    amin, amax = nonzero[0], nonzero[-1]
-    mass = countmap.get(a, 0)
-    less = sum(w for k, w in countmap.items() if k < a)
-    greater = total - less - mass
+    amin, amax = support[0], support[-1]
     mean = Fraction(sum(k * w for k, w in countmap.items()), total)
     second = Fraction(sum(k * k * w for k, w in countmap.items()), total)
     variance = second - mean * mean
@@ -207,7 +237,62 @@ def calculate_statistics(r: int, c: int, o: int, a: int,
         )
     if variance < 0:
         raise MRCDataError("Negative variance in data")
+    cumulative = [0]
+    for k in support:
+        cumulative.append(cumulative[-1] + countmap[k])
+    sorted_masses = sorted(countmap[k] for k in support)
+    mass_cumulative = [0]
+    for w in sorted_masses:
+        mass_cumulative.append(mass_cumulative[-1] + w)
+    mode_height = max(countmap.values())
+    modes = [k for k in support if countmap[k] == mode_height]
+    q_specs = [("q025", "0.025"), ("q05", "0.05"),
+               ("q25", "0.25"), ("median", "0.5"),
+               ("q75", "0.75"), ("q95", "0.95"),
+               ("q975", "0.975")]
+    quantiles = {name: quantile(support, countmap, total, Fraction(p))
+                 for name, p in q_specs}
+    return DistributionProfile(
+        r, c, o, countmap, total, support, cumulative,
+        sorted_masses, mass_cumulative, amin, amax, mean, variance,
+        modes, quantiles, {}
+    )
 
+
+def statistics_from_profile(profile: DistributionProfile, a: int,
+                            precision: int = 16) -> dict:
+    """Run a coupling query against a prepared profile (no linear rescans)."""
+    r, c, o = profile.r, profile.c, profile.o
+    n = r * c
+    edges = 2 * n - r - c
+    if not 0 <= a <= edges:
+        raise MRCDataError(f"Coupling a must be in [0,{edges}]")
+    total = profile.total
+    countmap = profile.counts
+    mean, variance = profile.mean, profile.variance
+    amin, amax = profile.amin, profile.amax
+    if precision not in profile.formatted_by_precision:
+        profile.formatted_by_precision[precision] = {
+            "n_cells": n,
+            "possible_edges": edges,
+            "occupancy_fraction": decimal_value(Fraction(o, n), precision),
+            "total_placements": str(total),
+            "amin": amin, "amax": amax,
+            "support_size": len(profile.support),
+            "mean": decimal_value(mean, precision),
+            "mean_exact": rational_json(mean),
+            "variance": decimal_value(variance, precision),
+            "variance_exact": rational_json(variance),
+            "stddev": decimal_sqrt(variance, precision),
+            "z_min": z_decimal(Fraction(amin) - mean, variance, precision) if variance > 0 else None,
+            "z_max": z_decimal(Fraction(amax) - mean, variance, precision) if variance > 0 else None,
+            "mode": profile.modes,
+            "quantiles": profile.quantiles,
+        }
+    shared = profile.formatted_by_precision[precision]
+    mass = countmap.get(a, 0)
+    less = profile.cumulative[bisect_left(profile.support, a)]
+    greater = total - less - mass
     fractions = {
         "pmf": Fraction(mass, total),
         "cdf_le": Fraction(less + mass, total),
@@ -216,62 +301,49 @@ def calculate_statistics(r: int, c: int, o: int, a: int,
         "tail_gt": Fraction(greater, total),
         "midrank_percentile": Fraction(2 * less + mass, 2 * total),
     }
-
-    # A valid exact two-sided p-value using distance from the NULL mean;
-    # this avoids a (generally invalid) normal-tail approximation.
-    target_dist = abs(Fraction(a) - mean)
-    two_sided_count = sum(
-        w for k, w in countmap.items()
-        if abs(Fraction(k) - mean) >= target_dist
-    )
-    fractions["two_sided_distance_p"] = Fraction(two_sided_count, total)
-    # Alternative discrete two-sided convention: probability ordering.
-    fractions["two_sided_probability_order_p"] = Fraction(
-        sum(w for w in countmap.values() if w <= mass), total
-    )
+    # Exact two-sided tail defined by distance from the null mean.
+    distance = abs(Fraction(a) - mean)
+    if distance == 0:
+        distance_count = total
+    else:
+        left = profile.cumulative[bisect_right(profile.support, mean - distance)]
+        right = total - profile.cumulative[bisect_left(profile.support, mean + distance)]
+        distance_count = left + right
+    fractions["two_sided_distance_p"] = Fraction(distance_count, total)
+    # Exact discrete two-sided alternative: probability (mass) ordering.
+    mass_count = profile.mass_cumulative[bisect_right(profile.sorted_masses, mass)]
+    fractions["two_sided_probability_order_p"] = Fraction(mass_count, total)
 
     attainable = mass > 0
     span = amax - amin
     bounded = Fraction(a - amin, span) if attainable and span else None
-    # Mean-centered bounded deviation; 0 at null mean, -1/+1 at endpoints.
     centered = None
     if attainable and variance > 0:
         if Fraction(a) >= mean:
             centered = (Fraction(a) - mean) / (Fraction(amax) - mean)
         else:
             centered = (Fraction(a) - mean) / (mean - Fraction(amin))
-
     z_score = z_decimal(Fraction(a) - mean, variance, precision) if variance > 0 else None
-    z_min = z_decimal(Fraction(amin) - mean, variance, precision) if variance > 0 else None
-    z_max = z_decimal(Fraction(amax) - mean, variance, precision) if variance > 0 else None
-    mode_height = max(countmap.values())
-    modes = [k for k in nonzero if countmap[k] == mode_height]
-    q_specs = [("q025", "0.025"), ("q05", "0.05"), ("q25", "0.25"),
-               ("median", "0.5"), ("q75", "0.75"), ("q95", "0.95"),
-               ("q975", "0.975")]
 
-    return {
+    result = {
         "r": r, "c": c, "o": o, "a": a,
-        "n_cells": n, "possible_edges": edges,
-        "occupancy_fraction": decimal_value(Fraction(o, n), precision),
-        "count": str(mass), "total_placements": str(total),
-        "attainable": attainable, "amin": amin, "amax": amax,
-        "support_size": len(nonzero),
-        "mean": decimal_value(mean, precision),
-        "mean_exact": rational_json(mean),
-        "variance": decimal_value(variance, precision),
-        "variance_exact": rational_json(variance),
-        "stddev": decimal_sqrt(variance, precision),
-        "z_score": z_score, "z_min": z_min, "z_max": z_max,
+        **shared,
+        "count": str(mass), "attainable": attainable,
+        "z_score": z_score,
         "bounded_aggregation": decimal_value(bounded, precision) if bounded is not None else None,
         "bounded_centered_deviation": decimal_value(centered, precision) if centered is not None else None,
-        "mode": modes,
-        "quantiles": {name: quantile(nonzero, countmap, total, Fraction(p)) for name, p in q_specs},
         "probabilities": {
             name: {"decimal": decimal_value(fr, precision), "exact": rational_json(fr)}
             for name, fr in fractions.items()
         },
     }
+    return result
+
+
+def calculate_statistics(r: int, c: int, o: int, a: int,
+                         countmap: Dict[int, int], precision: int = 16) -> dict:
+    """Compatibility API for single queries; batch mode prepares only once."""
+    return statistics_from_profile(prepare_distribution(r, c, o, countmap), a, precision)
 
 
 def write_distribution(path: Path, r: int, c: int, o: int,
@@ -295,6 +367,156 @@ def write_distribution(path: Path, r: int, c: int, o: int,
                 ])
     except OSError as exc:
         raise MRCDataError(f"Unable to export distribution: {exc}") from exc
+
+
+# Output columns are prefixed to avoid overwriting user sample identifiers.
+BATCH_STATS_COLUMNS = [
+    "mrc_status", "mrc_error", "mrc_source", "mrc_count",
+    "mrc_total_placements", "mrc_attainable", "mrc_occupancy_fraction",
+    "mrc_possible_edges", "mrc_amin", "mrc_amax", "mrc_support_size",
+    "mrc_mean", "mrc_variance", "mrc_stddev", "mrc_z_score",
+    "mrc_z_min", "mrc_z_max", "mrc_bounded_aggregation",
+    "mrc_bounded_centered_deviation", "mrc_midrank_percentile",
+    "mrc_midrank_percentile_fraction", "mrc_pmf", "mrc_pmf_fraction",
+    "mrc_cdf_le", "mrc_cdf_le_fraction",
+    "mrc_tail_ge", "mrc_tail_ge_fraction",
+    "mrc_tail_lt", "mrc_tail_gt",
+    "mrc_two_sided_distance_p", "mrc_two_sided_distance_p_fraction",
+    "mrc_two_sided_probability_order_p",
+    "mrc_two_sided_probability_order_p_fraction",
+    "mrc_modes", "mrc_q025", "mrc_q05", "mrc_q25",
+    "mrc_median", "mrc_q75", "mrc_q95", "mrc_q975",
+]
+
+
+def _fraction_text(exact: dict) -> str:
+    return f"{exact['numerator']}/{exact['denominator']}"
+
+
+def _batch_result(stats: dict, source: Path) -> dict:
+    """Flatten a single report for CSV output without rounding exact fractions."""
+    row = {
+        "mrc_status": "ok", "mrc_error": "", "mrc_source": str(source),
+        "mrc_count": stats["count"],
+        "mrc_total_placements": stats["total_placements"],
+        "mrc_attainable": str(stats["attainable"]).lower(),
+        "mrc_occupancy_fraction": stats["occupancy_fraction"],
+        "mrc_possible_edges": stats["possible_edges"],
+        "mrc_amin": stats["amin"], "mrc_amax": stats["amax"],
+        "mrc_support_size": stats["support_size"],
+        "mrc_mean": stats["mean"],
+        "mrc_variance": stats["variance"],
+        "mrc_stddev": stats["stddev"],
+        "mrc_z_score": stats["z_score"],
+        "mrc_z_min": stats["z_min"], "mrc_z_max": stats["z_max"],
+        "mrc_bounded_aggregation": stats["bounded_aggregation"],
+        "mrc_bounded_centered_deviation": stats["bounded_centered_deviation"],
+        "mrc_modes": ";".join(str(v) for v in stats["mode"]),
+    }
+    for key, value in stats["quantiles"].items():
+        row["mrc_" + key] = value
+    for name, data in stats["probabilities"].items():
+        row["mrc_" + name] = data["decimal"]
+        fraction_col = "mrc_" + name + "_fraction"
+        if fraction_col in BATCH_STATS_COLUMNS:
+            row[fraction_col] = _fraction_text(data["exact"])
+    return row
+
+
+def _valid_batch_request(row: dict, line_num: int) -> tuple:
+    if None in row or any(value is None for value in row.values()):
+        raise MRCDataError(f"Malformed CSV record on line {line_num}")
+    try:
+        r, c, o, a = (int(row[key].strip()) for key in ("r", "c", "o", "a"))
+    except (ValueError, AttributeError) as exc:
+        raise MRCDataError(f"Expected integer r,c,o,a on line {line_num}") from exc
+    if r <= 0 or c <= 0:
+        raise MRCDataError("r and c must both be positive")
+    if not 0 <= o <= r * c:
+        raise MRCDataError(f"Occupancy o must be in [0,{r*c}]")
+    edges = 2 * r * c - r - c
+    if not 0 <= a <= edges:
+        raise MRCDataError(f"Coupling a must be in [0,{edges}]")
+    return r, c, o, a
+
+
+def run_batch(batch_input: Path, output: Path, data_dir: Path,
+              precision: int = 16) -> tuple:
+    """Analyze an observation CSV, returning (successful, failed).
+
+    One scan per distinct rectangular shape, even when many occupancies are
+    requested. One validated statistical profile per (shape, occupancy).
+    Produces one output record per input record in original order.
+    """
+    if batch_input.resolve() == output.resolve():
+        raise MRCDataError("Batch input and output files must be different")
+    try:
+        with batch_input.open("r", newline="", encoding="utf-8-sig") as handle:
+            reader = csv.DictReader(handle)
+            if reader.fieldnames is None:
+                raise MRCDataError("Batch input has no CSV header")
+            fields = [name.strip() for name in reader.fieldnames]
+            if len(set(fields)) != len(fields) or any(not name for name in fields):
+                raise MRCDataError("Batch input has duplicate or blank column names")
+            required = {"r", "c", "o", "a"}
+            if not required.issubset(fields):
+                raise MRCDataError(
+                    "Batch input must contain columns r,c,o,a (other columns are allowed)"
+                )
+            collisions = sorted(set(fields) & set(BATCH_STATS_COLUMNS))
+            if collisions:
+                raise MRCDataError(
+                    "Input columns conflict with calculated columns: " + ", ".join(collisions)
+                )
+            # DictReader uses its original names; accept whitespace around headers.
+            reader.fieldnames = fields
+            rows = []
+            groups = {}
+            additions = []
+            for line_num, record in enumerate(reader, start=2):
+                idx = len(rows)
+                rows.append(record)
+                additions.append({})
+                try:
+                    r, c, o, a = _valid_batch_request(record, line_num)
+                except MRCDataError as exc:
+                    additions[idx] = {"mrc_status": "error", "mrc_error": str(exc)}
+                    continue
+                shape = (min(r, c), max(r, c))
+                groups.setdefault(shape, {}).setdefault(o, []).append((idx, a))
+    except OSError as exc:
+        raise MRCDataError(f"Unable to read batch input {batch_input}: {exc}") from exc
+
+    scans = 0
+    for (r, c), by_o in groups.items():
+        try:
+            source = locate_csv(data_dir, r, c)
+            tables = read_occupancies(source, r, c, by_o)
+            scans += 1
+            for o, observations in by_o.items():
+                profile = prepare_distribution(r, c, o, tables[o])
+                for idx, a in observations:
+                    stats = statistics_from_profile(profile, a, precision)
+                    additions[idx] = _batch_result(stats, source)
+        except MRCDataError as exc:
+            # Missing/incomplete/corrupt table: mark affected rows, never
+            # silently fall back to approximate statistics or extrapolation.
+            for observations in by_o.values():
+                for idx, _ in observations:
+                    additions[idx] = {"mrc_status": "error", "mrc_error": str(exc)}
+
+    successes = sum(add.get("mrc_status") == "ok" for add in additions)
+    failures = len(additions) - successes
+    try:
+        with output.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields + BATCH_STATS_COLUMNS,
+                                    extrasaction="raise")
+            writer.writeheader()
+            for original, computed in zip(rows, additions):
+                writer.writerow({**original, **computed})
+    except OSError as exc:
+        raise MRCDataError(f"Unable to write batch output {output}: {exc}") from exc
+    return successes, failures, scans
 
 
 def guess_data_dir() -> Path:
@@ -356,19 +578,44 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="Exact statistics from completed mrc-data CSV tables (no DP, stdlib only)."
     )
-    ap.add_argument("r", type=int, help="Grid rows")
-    ap.add_argument("c", type=int, help="Grid columns")
-    ap.add_argument("o", type=int, help="Number of occupied cells")
-    ap.add_argument("a", type=int, help="Observed number of couplings")
+    ap.add_argument("r", nargs="?", type=int, help="Grid rows (single-query mode)")
+    ap.add_argument("c", nargs="?", type=int, help="Grid columns (single-query mode)")
+    ap.add_argument("o", nargs="?", type=int, help="Number of occupied cells (single-query mode)")
+    ap.add_argument("a", nargs="?", type=int, help="Observed couplings (single-query mode)")
+    ap.add_argument("--batch", type=Path, metavar="INPUT.csv",
+                    help="Batch mode: CSV observations with columns r,c,o,a")
+    ap.add_argument("--output", type=Path, metavar="RESULTS.csv",
+                    help="Batch mode: output CSV with per-observation statistics")
     ap.add_argument("--data-dir", type=Path, default=guess_data_dir(),
                     help="Directory containing R.C.csv; default: MRC_DATA_DIR, ./data, or ~/dev/mrc-data/data")
     ap.add_argument("--precision", type=int, default=16,
                     help="Significant decimal digits shown (default 16)")
-    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON, including exact rational probabilities")
+    ap.add_argument("--json", action="store_true", help="Single mode: JSON with exact rational probabilities")
     ap.add_argument("--export-csv", type=Path, metavar="FILE",
-                    help="Export complete coupling distribution for this occupancy to CSV")
+                    help="Single mode: export complete coupling distribution to CSV")
     args = ap.parse_args(argv)
     try:
+        if not 3 <= args.precision <= 60:
+            raise MRCDataError("--precision must be between 3 and 60")
+        if args.batch is not None:
+            if any(v is not None for v in (args.r, args.c, args.o, args.a)):
+                raise MRCDataError("Do not supply positional r,c,o,a in --batch mode")
+            if args.output is None:
+                raise MRCDataError("--output RESULTS.csv is required with --batch")
+            if args.json or args.export_csv is not None:
+                raise MRCDataError("--json and --export-csv apply only to single-query mode")
+            good, bad, scans = run_batch(
+                args.batch.expanduser(), args.output.expanduser(),
+                args.data_dir.expanduser(), args.precision
+            )
+            print(f"Batch complete: {good} successful, {bad} errors, "
+                  f"{scans} completed source-table scans; output: {args.output}",
+                  file=sys.stderr)
+            return 1 if bad else 0
+        if args.output is not None:
+            raise MRCDataError("--output may only be used with --batch")
+        if any(v is None for v in (args.r, args.c, args.o, args.a)):
+            raise MRCDataError("Single-query mode requires r c o a (or use --batch)")
         r, c, o, a = args.r, args.c, args.o, args.a
         if r <= 0 or c <= 0:
             raise MRCDataError("r and c must both be positive")

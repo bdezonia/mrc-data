@@ -1,0 +1,6 @@
+sample_id,r,c,o,a,site
+Plot_A,3,3,4,0,north
+Plot_B,3,3,4,2,south
+Plot_C,3,3,4,4,east
+Plot_D,3,3,5,5,west
+Plot_E,3,3,0,0,center
