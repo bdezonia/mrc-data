@@ -519,6 +519,134 @@ def run_batch(batch_input: Path, output: Path, data_dir: Path,
     return successes, failures, scans
 
 
+
+def thermo_at_beta_j(profile: DistributionProfile, beta_j: str,
+                     precision: int = 16, observed_a: Optional[int] = None) -> dict:
+    """Finite fixed-o lattice gas with H=-J*A, open boundaries, dimensionless K=beta*J.
+
+    All MRC coefficients are exact integers. Thermodynamic evaluations are
+    high-precision decimal approximations, with log-sum-exp stabilization.
+    This is not a periodic-boundary, site-dependent, or longer-range model.
+    """
+    try:
+        k = Decimal(str(beta_j))
+    except (ValueError, ArithmeticError) as exc:
+        raise MRCDataError(f"Invalid --beta-j value: {beta_j!r}") from exc
+    if not k.is_finite():
+        raise MRCDataError("--beta-j must be finite")
+    if precision < 3 or precision > 60:
+        raise MRCDataError("--precision must be between 3 and 60")
+    if observed_a is not None:
+        e = 2 * profile.r * profile.c - profile.r - profile.c
+        if not 0 <= observed_a <= e:
+            raise MRCDataError(f"Observed coupling a must be in [0,{e}]")
+    with localcontext() as ctx:
+        ctx.prec = max(precision + 30, 70)
+        # Explicitly align all exponents before exponentiation. Even for large
+        # positive K, intermediate exponentials never exceed 1.
+        max_exponent = max(Decimal(a) * k for a in profile.support)
+        weighted = [(a, Decimal(profile.counts[a]) * (Decimal(a)*k - max_exponent).exp())
+                    for a in profile.support]
+        z_scaled = sum((w for _, w in weighted), Decimal(0))
+        if z_scaled <= 0:
+            raise MRCDataError("Internal error: zero partition sum")
+        if k == 0:
+            # At zero coupling strength, use the exact rational MRC moments.
+            mu = Decimal(profile.mean.numerator) / Decimal(profile.mean.denominator)
+            variance = (Decimal(profile.variance.numerator)
+                        / Decimal(profile.variance.denominator))
+        else:
+            mu = sum((Decimal(a)*w for a,w in weighted), Decimal(0)) / z_scaled
+            # Central second moment avoids cancellation in E[A^2]-E[A]^2.
+            variance = sum((((Decimal(a)-mu)**2)*w for a,w in weighted),
+                           Decimal(0)) / z_scaled
+        ln_z = max_exponent + z_scaled.ln()
+        ln_z_relative = ln_z - Decimal(profile.total).ln()
+        modal_weight = max(w for _,w in weighted)
+        eq_modes = [a for a,w in weighted if w == modal_weight]
+        def fmt(value):
+            if value.is_zero():
+                return "0"
+            return format(+value, f".{precision}g")
+        result = {
+            "r": profile.r, "c": profile.c, "o": profile.o,
+            "total_placements": str(profile.total),
+            "support_min": profile.amin, "support_max": profile.amax,
+            "beta_j": str(k),
+            "log_partition_Z": fmt(ln_z),
+            "log_partition_Z_over_Z0": fmt(ln_z_relative),
+            "mean_couplings": fmt(mu),
+            "variance_couplings": fmt(variance),
+            "mean_energy_over_J": fmt(-mu),
+            "variance_energy_over_J_squared": fmt(variance),
+            "heat_capacity_over_kB": fmt(k*k*variance),
+            "contact_susceptibility_dmean_dK": fmt(variance),
+            "equilibrium_modes": eq_modes,
+        }
+        if observed_a is not None:
+            mass = profile.counts.get(observed_a, 0)
+            if mass:
+                p_obs = (Decimal(mass) * (Decimal(observed_a)*k-max_exponent).exp()
+                         / z_scaled)
+            else:
+                p_obs = Decimal(0)
+            result["observed_a"] = observed_a
+            result["observed_probability_at_beta_j"] = fmt(p_obs)
+        return result
+
+
+THERMO_COLUMNS = [
+    "r", "c", "o", "beta_j", "total_placements", "support_min", "support_max",
+    "log_partition_Z", "log_partition_Z_over_Z0", "mean_couplings",
+    "variance_couplings", "mean_energy_over_J", "variance_energy_over_J_squared",
+    "heat_capacity_over_kB", "contact_susceptibility_dmean_dK",
+    "equilibrium_modes", "observed_a", "observed_probability_at_beta_j",
+]
+
+
+def export_thermo_results(path: Path, results: list) -> None:
+    """Write thermodynamic results to a CSV using the same field names as JSON."""
+    try:
+        with path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=THERMO_COLUMNS)
+            writer.writeheader()
+            for result in results:
+                row = dict(result)
+                row["equilibrium_modes"] = ";".join(map(str,row["equilibrium_modes"]))
+                writer.writerow(row)
+    except OSError as exc:
+        raise MRCDataError(f"Unable to write thermodynamics CSV {path}: {exc}") from exc
+
+
+def format_thermo(results: list, source: Path) -> str:
+    first = results[0]
+    lines = [
+        f"MRC canonical fixed-occupancy lattice gas: "
+        f"{first['r']}x{first['c']}, o={first['o']}",
+        f"Source: {source}",
+        "Open boundaries; H=-J*a, beta=1/(kB*T), K=beta*J.",
+        "Values are numerical evaluations of the exact finite density of states.",
+        "Logs use natural logarithms; no assumption of a thermodynamic limit.",
+    ]
+    for item in results:
+        lines.extend([
+            "",
+            f"K=beta*J:                         {item['beta_j']}",
+            f"  log Z:                          {item['log_partition_Z']}",
+            f"  log(Z / C(rc,o)):               {item['log_partition_Z_over_Z0']}",
+            f"  mean couplings <a>:             {item['mean_couplings']}",
+            f"  var(a):                         {item['variance_couplings']}",
+            f"  mean energy / J:                {item['mean_energy_over_J']}",
+            f"  C_V / k_B (fixed J):            {item['heat_capacity_over_kB']}",
+            f"  d<a>/dK:                       {item['contact_susceptibility_dmean_dK']}",
+            f"  equilibrium mode(s):            {item['equilibrium_modes']}",
+        ])
+        if "observed_a" in item:
+            lines.append(f"  P(A={item['observed_a']} | K):         "
+                         f"{item['observed_probability_at_beta_j']}")
+    return "\n".join(lines)
+
+
 def guess_data_dir() -> Path:
     if os.environ.get("MRC_DATA_DIR"):
         return Path(os.environ["MRC_DATA_DIR"]).expanduser()
@@ -582,10 +710,14 @@ def main(argv=None) -> int:
     ap.add_argument("c", nargs="?", type=int, help="Grid columns (single-query mode)")
     ap.add_argument("o", nargs="?", type=int, help="Number of occupied cells (single-query mode)")
     ap.add_argument("a", nargs="?", type=int, help="Observed couplings (single-query mode)")
+    ap.add_argument("--thermo", action="store_true",
+                    help="Canonical lattice-gas mode: H=-J*a, fixed occupancy; a is optional")
+    ap.add_argument("--beta-j", action="append", metavar="K",
+                    help="Dimensionless interaction K=J/(kB*T); repeat for multiple points (default 0)")
     ap.add_argument("--batch", type=Path, metavar="INPUT.csv",
                     help="Batch mode: CSV observations with columns r,c,o,a")
     ap.add_argument("--output", type=Path, metavar="RESULTS.csv",
-                    help="Batch mode: output CSV with per-observation statistics")
+                    help="Batch or thermodynamics mode: output CSV")
     ap.add_argument("--data-dir", type=Path, default=guess_data_dir(),
                     help="Directory containing R.C.csv; default: MRC_DATA_DIR, ./data, or ~/dev/mrc-data/data")
     ap.add_argument("--precision", type=int, default=16,
@@ -598,6 +730,8 @@ def main(argv=None) -> int:
         if not 3 <= args.precision <= 60:
             raise MRCDataError("--precision must be between 3 and 60")
         if args.batch is not None:
+            if args.thermo or args.beta_j:
+                raise MRCDataError("--batch and --thermo/--beta-j cannot be combined")
             if any(v is not None for v in (args.r, args.c, args.o, args.a)):
                 raise MRCDataError("Do not supply positional r,c,o,a in --batch mode")
             if args.output is None:
@@ -612,8 +746,33 @@ def main(argv=None) -> int:
                   f"{scans} completed source-table scans; output: {args.output}",
                   file=sys.stderr)
             return 1 if bad else 0
+        if args.thermo:
+            if any(v is None for v in (args.r,args.c,args.o)):
+                raise MRCDataError("--thermo requires positional r c o (a is optional)")
+            if args.r <= 0 or args.c <= 0 or not 0 <= args.o <= args.r*args.c:
+                raise MRCDataError("Invalid grid or occupancy for --thermo")
+            if args.export_csv is not None:
+                raise MRCDataError("--export-csv is for ordinary statistics; use --output for --thermo")
+            source = locate_csv(args.data_dir.expanduser(), args.r, args.c)
+            if args.output and args.output.expanduser().resolve() == source.resolve():
+                raise MRCDataError("Refusing to overwrite the source MRC table")
+            counts = read_occupancy(source,args.r,args.c,args.o)
+            profile = prepare_distribution(args.r,args.c,args.o,counts)
+            results = [thermo_at_beta_j(profile,k,args.precision,args.a)
+                       for k in (args.beta_j if args.beta_j else ["0"])]
+            if args.output:
+                export_thermo_results(args.output.expanduser(),results)
+            if args.json:
+                print(json.dumps({"source":str(source), "thermodynamics":results}, indent=2))
+            else:
+                print(format_thermo(results,source))
+            if args.output:
+                print(f"Thermodynamic results exported to: {args.output}",file=sys.stderr)
+            return 0
+        if args.beta_j:
+            raise MRCDataError("--beta-j requires --thermo")
         if args.output is not None:
-            raise MRCDataError("--output may only be used with --batch")
+            raise MRCDataError("--output may only be used with --batch or --thermo")
         if any(v is None for v in (args.r, args.c, args.o, args.a)):
             raise MRCDataError("Single-query mode requires r c o a (or use --batch)")
         r, c, o, a = args.r, args.c, args.o, args.a
@@ -639,7 +798,7 @@ def main(argv=None) -> int:
             if args.export_csv:
                 print(f"Distribution exported to: {args.export_csv}")
         return 0
-    except MRCDataError as exc:
+    except (MRCDataError, ArithmeticError, OverflowError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
