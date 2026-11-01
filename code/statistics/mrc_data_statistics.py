@@ -736,7 +736,8 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true", help="Single mode: JSON with exact rational probabilities")
     ap.add_argument("--export-csv", type=Path, metavar="FILE",
                     help="Single mode: export complete coupling distribution to CSV")
-    args = ap.parse_args(argv)
+    # Allow options to appear between the optional positional arguments.
+    args = ap.parse_intermixed_args(argv)
     try:
         if not 3 <= args.precision <= 60:
             raise MRCDataError("--precision must be between 3 and 60")
