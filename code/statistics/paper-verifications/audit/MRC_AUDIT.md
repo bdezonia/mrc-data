@@ -72,11 +72,19 @@ A related restart issue: `mrc_batch_generate.py` trusts an existing zero-byte `r
 
 **Portability limitations:** C++ emits raw host-endian `uint32_t` data while Python reads little-endian. The audited execution environment is Linux/x86-64 little-endian; use an explicitly little-endian C++ writer for portable reproducibility. `__builtin_popcount` and `-march=native` are compiler/platform-specific. The implementation limits mask width to `<24` and available memory, but the theorem has no such limit.
 
-## 7. Release recommendation and publication claim
+## 7. Candidate release snapshot update (from separate user-run validator)
+
+The 2026-10-31 source audit above was made when the archive contained **522 tables**; its source and runtime tests should be read as a historical record. A subsequent user-run `mrc_validation_report_v2.csv` covered **524 tables**, with **524 PASS / 0 FAIL**, **58,432,605 dense coefficient records** and **14,863,002 nonzero coefficients**. The new files were `17.26.csv` and `17.27.csv`; all 522 older files retained their earlier reported SHA-256 digests. For the 524-table report, all tables passed occupancy totals, factorial moments through order three, and special boundary distributions; 27 smaller tables passed full brute-force checks, and 225 passed two modular polynomial fingerprints.
+
+The repository release candidate contains a **normalized copy** of the later report under `mrc_validation_report.csv` (its `file` column changed to portable `data/<r>.<c>.csv` paths) and a newly generated 524-entry `SHA256SUMS`. Those hashes originate from the user's local validation run; they must be checked against the **actual released data** before a tag is created. No further full-archive validation has been executed in the environment preparing this release candidate.
+
+The earlier `mrc_source_sha256.csv` is intentionally omitted here: its filenames include an upload-local `mrc_batch_generate(1).py` and should not be presented as hashes of the eventual GitHub commit. Generate source hashes anew from the exact tagged source if desired.
+
+## 8. Release recommendation and publication claim
 
 1. Keep the currently audited generator source and reference tests unchanged during an active long calculation. For the later tagged release, harden prime-cache validation and preserve a complete source SHA-256 manifest.
-2. Freeze a versioned `mrc_data` archive snapshot, verifying every actual CSV SHA-256 against `mrc_archive_checksums_snapshot.csv` from this report.
-3. Publish the proof of transfer equivalence, butterfly equivalence, and exact CRT, plus the executable audit and outcomes.
+2. Freeze a versioned `mrc_data` archive snapshot, verifying every actual CSV SHA-256 against the candidate 524-file `paper-verifications/SHA256SUMS` (and checking there are no extra `r.c.csv` tables in the tag).
+3. Publish the recurrence/butterfly/CRT proofs, executable audit and reports. Keep historical source-audit results distinguishable from the subsequent 524-table validation.
 4. State explicitly that normalization/moment/fingerprint checks are strong independent **computational checks**, not an isolated formal proof of all bytes in the released archive.
 
-Suggested defensible language: *"The coefficients are calculated by an exact integer algorithm whose row recurrence, butterfly factorization, and reconstruction bounds are proved. All 522 files in the reported archive snapshot passed independent combinatorial checks; the precise computational cross-check coverage and SHA-256 digests are supplied for reproducibility."*
+Suggested defensible language: *"The coefficients are calculated by an exact integer algorithm whose row recurrence, butterfly factorization, and reconstruction bounds are proved. All 524 files in the released archive snapshot passed independent combinatorial checks; the precise computational cross-check coverage and SHA-256 digests are supplied for reproducibility."*

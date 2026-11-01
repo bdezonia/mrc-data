@@ -1,40 +1,99 @@
-# MRC archive validation kit
+# MRC coefficient archive: validation and release evidence
 
-Independent audit of the existing `mrc_data` CSV archive, intended as the foundation for a methods/data publication.
+This directory documents the validation of the **524-table candidate release snapshot** of
+`mrc-data`. Validation is distinct from the mathematical proof of the enumerator.
+The complete MRC data tables remain under `data/` at the repository root. Generator
+sources and statistical tools are maintained elsewhere under `code/`; this folder is
+validation/release evidence only.
 
-Requirements: Python 3.9+, standard library only. It does not import or modify the MRC statistics tool. It expects `r.c.csv` with header `r,c,o,a,count` and final line `.DONE.`; sparse and dense tables are accepted.
+## Recorded snapshot (pre-release; do not confuse with a frozen Git tag)
 
-## Run on the full archive
+- Tables: **524 PASS, 0 FAIL**.
+- Dense coefficient records: **58,432,605**, of which **14,863,002** are nonzero.
+- Full brute-force coefficient comparisons: **27** tables (all with at most 16 cells).
+- Independent transfer checks: **225** tables, with two polynomial evaluations mod distinct primes (these are fingerprints, not full coefficient comparisons).
+- All 524 tables passed occupancy normalization, first-through-third factorial-moment identities, and exact special-occupancy checks.
+- Additions since 522-table predecessor: `17.26.csv` and `17.27.csv`. Previous 522 digests unchanged.
+- Rectangles covered: all `1 <= r <= 15`, `r <= c <= 40`; all `16 <= c <= 32` for `r=16`; all `17 <= c <= 27` for `r=17`; and `18.18.csv`.
+- Boundary conditions are **open** and occupancy is fixed in the statistical null model.
 
-```bash
-python3 mrc_archive_validate.py ~/dev/mrc-data/data --report mrc_validation_report.csv
+## Repository layout
+
+The paths in the instructions below match this repository structure:
+
+```text
+~/dev/mrc-data/
+├── data/                         # r.c.csv tables
+└── code/
+    └── statistics/
+        └── paper-verifications/
+            ├── README.md
+            ├── mrc_validation_report.csv
+            ├── SHA256SUMS
+            ├── verify_release_snapshot.py
+            ├── mrc_archive_validate.py
+            ├── test_mrc_archive_validate.py
+            ├── MRC_VALIDATION_PROOF_NOTE.md
+            └── audit/
 ```
 
-It scans **every** named `r.c.csv` under the given folder, checking every occupancy's exact total and coupling moments of orders 1, 2, 3, plus exact boundary cases. For `rc<=16`, it compares every value with brute-force enumeration. For minimum side <=6, it additionally compares two polynomial fingerprints with an independent straightforward transfer calculation (not the butterfly). Logs PASS/FAIL for each table and writes a CSV report with checks performed and SHA-256 digests. One bad table does not stop the remaining checks; an error sets exit code 1.
-
-For large archives this may take a while. To begin with the least expensive audit, disable optional additional checks:
-
-```bash
-python3 mrc_archive_validate.py ~/dev/mrc-data/data \
-    --brute-cells 0 --transfer-width 0 \
-    --report mrc_validation_fast.csv
-```
-
-To make the transfer cross-check more thorough at additional computational cost, increase `--transfer-width 6` to `7` or `8`.
-
-## Test
-
-```bash
-python3 -m unittest -v test_mrc_archive_validate.py
-```
-
-The test suite independently constructs small exact tables by brute force. It also deliberately corrupts tables so that their totals and lower moments are unchanged, verifying that the third-moment test and the independent transfer fingerprints detect the corruption.
+The corrected verifier locates `mrc_validation_report.csv` and `SHA256SUMS`
+relative to **its own script location**, while `--repo-root` points to the directory
+containing `data/`. This avoids assuming `paper-verifications/` is at the
+repository root.
 
 ## Files
 
-- `mrc_archive_validate.py`: independent validator.
-- `test_mrc_archive_validate.py`: its tests.
-- `MRC_VALIDATION_PROOF_NOTE.md`: rigorous recurrence and butterfly proofs, graph-moment identities, validation limitations.
-- `sample_data/3.3.csv`: tiny synthetic reference table, not a claim about the public repo.
+| Path | Role |
+| --- | --- |
+| `mrc_archive_validate.py` | Independent exact-integer CSV validator; unchanged from the tested version. |
+| `test_mrc_archive_validate.py` | Seven self-contained unit-test groups. |
+| `MRC_VALIDATION_PROOF_NOTE.md` | Recurrence, butterfly factorization, and independent moment identities. |
+| `mrc_validation_report.csv` | Portable 524-table report; `file` column normalized to `data/<r>.<c>.csv`. |
+| `SHA256SUMS` | SHA-256 digest for every CSV in that report, relative to repository root. |
+| `verify_release_snapshot.py` | Pre-tag check of actual CSV hashes, set completeness, and report/manifest agreement. |
+| `audit/MRC_AUDIT.md` | 2026-10-31 source review (522-table historical context) with 524-table addendum and known limitations. |
+| `audit/mrc_audit_tests.py` | Additional independent brute-force/modular kernel test; requires `--kernel`. |
+| `audit/additional_kernel_tests.log` | Recorded output of the 27-rectangle, 81-modular-comparison audit. |
 
-This package is a **first step**, not a certificate that the full archive was validated. Its output report from an actual archive run is the evidence needed for the paper.
+The original machine-local 524-table report was named `mrc_validation_report_v2.csv`.
+This copy modifies **only the file paths**, not any counts, statuses, or hashes.
+SHA-256 of original, unmodified report: `b332e5d52d3901ec5c651b86feb450b8fa911f245d1eda875b862b8891ecf15a`.
+The 522-table predecessor and the duplicate original sanitizer test log are retained outside this release candidate, rather than included here.
+
+## Run validation on an archive
+
+From the repository root:
+
+```bash
+python3 -m unittest discover \
+    -s code/statistics/paper-verifications \
+    -p 'test_mrc_archive_validate.py' -v
+
+python3 code/statistics/paper-verifications/verify_release_snapshot.py \
+    --repo-root .
+```
+
+The second command compares every file hash and rejects missing or unexpected `r.c.csv` tables. **Do this after stopping or isolating the generator**, so the data tree cannot change during the check. Because the manifest freezes exactly 524 tables, newly generated tables will intentionally cause an "extra tables" failure unless you isolate the tagged 524-table snapshot. This was **not** run against the full repository as part of preparing this candidate, because the data files were not supplied in this ZIP.
+
+To independently rerun the full mathematical audit (it scans all tables and may be costly):
+
+```bash
+python3 code/statistics/paper-verifications/mrc_archive_validate.py data \
+    --report /tmp/mrc_validation_rerun.csv
+```
+
+For separate kernel audit tests, first build the C++ generator from its own source directory, then supply the **absolute** path of that executable:
+
+```bash
+python3 code/statistics/paper-verifications/audit/mrc_audit_tests.py \
+    --kernel /absolute/path/to/mrc_fast_transform
+```
+
+## Scientific and software limitations
+
+- The recurrence, butterfly factorization and CRT bound establish mathematical exactness of the algorithm under their stated assumptions. The report provides **computational evidence** of the published coefficients, not a formal per-byte proof.
+- `SHA256SUMS` is derived from the user-run validation report; it is **not independent authentication** of the archive. It must match files in the release commit.
+- The earlier source review identified a prime-cache integrity gap and a `.DONE`-marker restart trust assumption. These do not imply errors in the validated archive, but should be documented and addressed in future generator improvements.
+- The release should contain the generator, dense reference, statistical calculator (including thermodynamics), and build/test instructions elsewhere in the repository, all verified to match the desired tagged source.
+- Future data additions require a new report and version, not a change to this release snapshot.

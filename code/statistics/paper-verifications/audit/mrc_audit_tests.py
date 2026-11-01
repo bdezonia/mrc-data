@@ -37,7 +37,7 @@ def read_module(path,r,c,p):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--kernel',type=Path,default=Path(__file__).resolve().parent/'source'/'mrc_fast_transform')
+    ap.add_argument('--kernel',type=Path,required=True,help='Path to a compiled mrc_fast_transform executable')
     args=ap.parse_args()
     k=args.kernel.resolve()
     if not k.is_file():

@@ -16,6 +16,7 @@ from fractions import Fraction
 from math import comb
 import json
 import os
+import re
 from pathlib import Path
 import sys
 from typing import Dict, Optional, Iterable
@@ -35,6 +36,15 @@ def locate_csv(directory: Path, r: int, c: int) -> Path:
         "Missing table for %dx%d. Tried: %s" %
         (r, c, ", ".join(str(p) for p in dict.fromkeys(candidates)))
     )
+
+
+def protect_archive_output(output: Path, data_dir: Path, source: Optional[Path] = None) -> None:
+    """Refuse to overwrite a canonical r.c.csv table in the archive directory."""
+    target = output.expanduser().resolve()
+    if source is not None and target == source.resolve():
+        raise MRCDataError(f"Refusing to overwrite the source MRC table: {output}")
+    if target.parent == data_dir.expanduser().resolve() and re.fullmatch(r"\d+\.\d+\.csv", target.name):
+        raise MRCDataError(f"Refusing to overwrite an MRC archive table: {output}")
 
 
 def read_occupancies(path: Path, r: int, c: int,
@@ -450,6 +460,7 @@ def run_batch(batch_input: Path, output: Path, data_dir: Path,
     """
     if batch_input.resolve() == output.resolve():
         raise MRCDataError("Batch input and output files must be different")
+    protect_archive_output(output, data_dir)
     try:
         with batch_input.open("r", newline="", encoding="utf-8-sig") as handle:
             reader = csv.DictReader(handle)
@@ -754,8 +765,8 @@ def main(argv=None) -> int:
             if args.export_csv is not None:
                 raise MRCDataError("--export-csv is for ordinary statistics; use --output for --thermo")
             source = locate_csv(args.data_dir.expanduser(), args.r, args.c)
-            if args.output and args.output.expanduser().resolve() == source.resolve():
-                raise MRCDataError("Refusing to overwrite the source MRC table")
+            if args.output:
+                protect_archive_output(args.output, args.data_dir, source)
             counts = read_occupancy(source,args.r,args.c,args.o)
             profile = prepare_distribution(args.r,args.c,args.o,counts)
             results = [thermo_at_beta_j(profile,k,args.precision,args.a)
@@ -789,6 +800,7 @@ def main(argv=None) -> int:
         result = calculate_statistics(r, c, o, a, counts, args.precision)
         result["source"] = str(source)
         if args.export_csv:
+            protect_archive_output(args.export_csv, args.data_dir, source)
             write_distribution(args.export_csv.expanduser(), r, c, o, counts, args.precision)
             result["export_csv"] = str(args.export_csv)
         if args.json:

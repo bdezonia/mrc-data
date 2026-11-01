@@ -1,6 +1,6 @@
 # MRC archive validation: mathematical foundations and reproducibility
 
-**Status:** proof of the enumerating recurrence and its tensor factorization; computational checks of particular CSV files are a distinct claim. This note is a working validation appendix, not a claim that the complete public archive has already been audited.
+**Status:** The enumeration recurrence and tensor factorization are proved for arbitrary finite rectangles. The separate release-candidate report records computational checks on 524 archived CSV files (524 PASS, 0 FAIL). These checks, while extensive, are not a formal machine proof of every coefficient. The report refers to the candidate snapshot, which must be matched by SHA-256 to the final tagged data files.
 
 ## Definition
 
