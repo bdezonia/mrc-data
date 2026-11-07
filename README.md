@@ -99,19 +99,27 @@ If you use this data, please cite:
 > DeZonia, B. (2026). *Exact enumeration tables for grid occupancy adjacencies*.
 > GitHub repository: https://github.com/bdezonia/mrc-data
 
-### Related publication
+**Barry DeZonia**, *Exact Adjacency Bounds for Rectangular Grid Subsets*, [HAL preprint hal-05466387 (2026)](https://hal.science/hal-05466387).
+
+### Related publications
 
 The exact formulas for
 
- <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" />(r,c,o) 
+<img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmin%7D" />(r,c,o)
 
-  and
+and
 
- <img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />(r,c,o) 
+<img src="https://latex.codecogs.com/svg.latex?a_%7B%5Cmax%7D" />(r,c,o)
 
- used to validate this dataset are presented in:
+used to validate this dataset are presented in:
 
 **Barry DeZonia**, *Exact Adjacency Bounds for Rectangular Grid Subsets*, [HAL preprint hal-05466387 (2026)](https://hal.science/hal-05466387).
+
+The exact enumeration methods, computational validation, and statistical applications of the MRC dataset are described in:
+
+**Barry DeZonia**, *Exact Nearest-Neighbor Contact Distributions on Finite Rectangular Lattices: Enumeration, Validation, and Applications*, [HAL preprint hal-05847008 (2026)](https://hal.science/hal-05847008).
+
+The second paper documents the validated dataset and its use for exact fixed-occupancy probabilities, statistical significance testing, and finite-lattice thermodynamics. The corresponding dataset and software are available in the [mrc-data v1.0.0 release](https://github.com/bdezonia/mrc-data/releases/tag/v1.0.0).
 
 ---
 
